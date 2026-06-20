@@ -131,11 +131,11 @@ impl Program<Message> for DrawNote{
                 return Some(canvas::Action::publish(Message::End))
             }
 
-            Event::Mouse(mouse::Event::CursorMoved { position }) => {
+            Event::Mouse(mouse::Event::CursorMoved { position: _ }) => {
                 if !state.is_drawing {
                     return None
                 }
-                return Some(canvas::Action::publish(Message::Move(position.clone())))
+                return Some(canvas::Action::publish(Message::Move(cursor_position)))
             }
 
             _ => {}

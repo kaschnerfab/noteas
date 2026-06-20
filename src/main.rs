@@ -1,24 +1,14 @@
-use iced::{Center, Renderer, Theme, mouse, Color};
+use iced::{Center, Color, Event, Rectangle, Renderer, Theme, mouse, Point};
 use iced::widget::canvas::{Program, Path};
-use iced::widget::{canvas};
+use iced::widget::{Action, canvas};
+use iced::mouse::{Cursor};
 
 pub fn main() -> iced::Result {
     iced::run(DrawNote::update, DrawNote::view)
 }
 
-#[derive(Default)]
-struct Point {
-    x: i64,
-    y: i64
-}
-
-struct Line{
-    start: Point,
-    end: Point,
-}
-
 struct Stroke {
-    lines: Vec<Line>,
+    lines: Vec<Point<f32>>,
 }
 
 #[derive(Default)]
@@ -26,11 +16,16 @@ struct DrawNote {
     strokes: Vec<Stroke>
 }
 
+#[derive(Default)]
+struct NoteState {
+    is_drawing: bool,
+}
+
 #[derive(Debug, Clone, Copy)]
 enum Message {
-    Start,
+    Start(Point<f32>),
     End,
-    Move,
+    Move(Point<f32>),
 }
 
 impl DrawNote {
@@ -46,7 +41,7 @@ impl DrawNote {
 }
 
 impl<Message> Program<Message> for DrawNote{
-    type State = ();
+    type State = NoteState;
 
     fn draw(
         &self,
@@ -70,12 +65,45 @@ impl<Message> Program<Message> for DrawNote{
 
         /*frame.stroke(
             &canvas::Path::line(
-                iced::Point::new(10.0, 10.0),
-                iced::Point::new(100.0, 100.0),
+                Point::new(10.0, 10.0),
+                Point::new(100.0, 100.0),
             ),
             canvas::Stroke::default(),
         );*/
 
         vec![frame.into_geometry()]
+    }
+    fn update(
+        &self,
+        state: &mut Self::State,
+        event: &Event,
+        bounds: Rectangle,
+        cursor: Cursor,
+    ) -> Option<Action<Message>>{
+        let cursor_position = cursor.position_in(bounds)?;
+        
+        match event {
+            Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)) => {
+                state.is_drawing = true;
+                println!("mouse down at {:?}", cursor_position);
+            }
+
+            Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left)) => {
+                state.is_drawing = false;
+                println!("mouse up at {:?}", cursor_position);
+            }
+
+            Event::Mouse(mouse::Event::CursorMoved { position }) => {
+                if !state.is_drawing {
+                    return None
+                }
+                println!("mouse moved at position {:?}", cursor_position);
+                println!("mouse moved at point {:?}", position);
+            }
+
+            _ => {}
+        }
+
+        None
     }
 }

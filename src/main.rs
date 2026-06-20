@@ -38,19 +38,19 @@ impl DrawNote {
     fn update(&mut self, message: Message) {
         match message {
             Message::Start(point) => {
-                println!("Start recieved");
                 let mut new_stroke = Stroke::new(); 
                 new_stroke.points.push(point);
                 self.strokes.push(new_stroke);
             }
             Message::Move(point) => {
-                println!("Move recieved");
                 if let Some(stroke) = self.strokes.last_mut() {
                     stroke.points.push(point);
                 }
             }
             Message::End => {
-                println!("End recieved")
+                if let Some(stroke) = self.strokes.last() {
+                    println!("Stroke length: {:?}", stroke.points.len());
+                }
             }
         }
     }

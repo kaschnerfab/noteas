@@ -1,6 +1,6 @@
 use iced::{Center, Color, Event, Rectangle, Renderer, Theme, mouse, Point};
-use iced::widget::canvas::{Program, Path};
-use iced::widget::{Action, canvas};
+use iced::widget::canvas::{Program, Path, Action};
+use iced::widget::{canvas};
 use iced::mouse::{Cursor};
 
 pub fn main() -> iced::Result {

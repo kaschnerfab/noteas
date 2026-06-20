@@ -1,5 +1,5 @@
-use iced::{Center, Renderer, Theme, mouse};
-use iced::widget::canvas::Program;
+use iced::{Center, Renderer, Theme, mouse, Color};
+use iced::widget::canvas::{Program, Path};
 use iced::widget::{canvas};
 
 pub fn main() -> iced::Result {
@@ -37,7 +37,11 @@ impl DrawNote {
     fn update(&mut self, message: Message) {
     }
 
-    fn view(&self) {
+    fn view(&self) -> iced::Element<Message> {
+        canvas(self)
+            .width(iced::Fill)
+            .height(iced::Fill)
+            .into()
     }
 }
 
@@ -53,7 +57,25 @@ impl<Message> Program<Message> for DrawNote{
         cursor: mouse::Cursor,
     ) -> Vec<canvas::Geometry<Renderer>>
     {
-        let mut gem: Vec<canvas::Geometry<Renderer>> = Vec::new();
-        gem
+        let mut frame = canvas::Frame::new(renderer, bounds.size());
+        let background = Path::rectangle(
+            iced::Point::ORIGIN,
+            frame.size(),
+        );
+
+        frame.fill(
+            &background,
+            Color::WHITE,
+        );
+
+        /*frame.stroke(
+            &canvas::Path::line(
+                iced::Point::new(10.0, 10.0),
+                iced::Point::new(100.0, 100.0),
+            ),
+            canvas::Stroke::default(),
+        );*/
+
+        vec![frame.into_geometry()]
     }
 }

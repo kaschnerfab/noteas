@@ -8,7 +8,7 @@ pub fn main() -> iced::Result {
 }
 
 struct Stroke {
-    lines: Vec<Point<f32>>,
+    points: Vec<Point<f32>>,
 }
 
 #[derive(Default)]
@@ -28,8 +28,31 @@ enum Message {
     Move(Point<f32>),
 }
 
+impl Stroke {
+    fn new() -> Self {
+        Stroke { points: Vec::new() }
+    }
+}
+
 impl DrawNote {
     fn update(&mut self, message: Message) {
+        match message {
+            Message::Start(point) => {
+                println!("Start recieved");
+                let mut new_stroke = Stroke::new(); 
+                new_stroke.points.push(point);
+                self.strokes.push(new_stroke);
+            }
+            Message::Move(point) => {
+                println!("Move recieved");
+                if let Some(stroke) = self.strokes.last_mut() {
+                    stroke.points.push(point);
+                }
+            }
+            Message::End => {
+                println!("End recieved")
+            }
+        }
     }
 
     fn view(&self) -> iced::Element<Message> {
@@ -40,16 +63,16 @@ impl DrawNote {
     }
 }
 
-impl<Message> Program<Message> for DrawNote{
+impl Program<Message> for DrawNote{
     type State = NoteState;
 
     fn draw(
         &self,
-        state: &Self::State,
+        _state: &Self::State,
         renderer: &Renderer,
-        theme: &Theme,
+        _theme: &Theme,
         bounds: iced::Rectangle,
-        cursor: mouse::Cursor,
+        _cursor: mouse::Cursor,
     ) -> Vec<canvas::Geometry<Renderer>>
     {
         let mut frame = canvas::Frame::new(renderer, bounds.size());
@@ -62,6 +85,21 @@ impl<Message> Program<Message> for DrawNote{
             &background,
             Color::WHITE,
         );
+
+        for stroke in &self.strokes {
+            if stroke.points.len() < 1 {
+                continue;
+            }
+            for i in 1..stroke.points.len() {
+                frame.stroke(
+                    &canvas::Path::line(
+                        stroke.points[i - 1],
+                        stroke.points[i]
+                    ),
+                    canvas::Stroke::default(),
+                );   
+            }
+        }
 
         /*frame.stroke(
             &canvas::Path::line(
@@ -85,20 +123,19 @@ impl<Message> Program<Message> for DrawNote{
         match event {
             Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)) => {
                 state.is_drawing = true;
-                println!("mouse down at {:?}", cursor_position);
+                return Some(canvas::Action::publish(Message::Start(cursor_position)))
             }
 
             Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left)) => {
                 state.is_drawing = false;
-                println!("mouse up at {:?}", cursor_position);
+                return Some(canvas::Action::publish(Message::End))
             }
 
             Event::Mouse(mouse::Event::CursorMoved { position }) => {
                 if !state.is_drawing {
                     return None
                 }
-                println!("mouse moved at position {:?}", cursor_position);
-                println!("mouse moved at point {:?}", position);
+                return Some(canvas::Action::publish(Message::Move(position.clone())))
             }
 
             _ => {}

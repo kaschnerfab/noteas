@@ -1,4 +1,3 @@
-
 use iced::mouse::Cursor;
 use iced::{Color, Event, Point, Rectangle, Renderer, Theme, mouse};
 use iced::widget::canvas::{Path, Program, Action};
@@ -6,7 +5,7 @@ use iced::widget::canvas;
 use super::stroke::Stroke;
 
 #[derive(Debug, Clone, Copy)]
-pub enum Message {
+pub enum DrawMessage {
     Start(Point<f32>),
     End,
     Move(Point<f32>),
@@ -23,20 +22,20 @@ pub struct DrawNote {
 }
 
 impl DrawNote {
-    pub fn update(&mut self, message: Message) {
+    pub fn update(&mut self, message: DrawMessage) {
         match message {
-            Message::Start(point) => {
+            DrawMessage::Start(point) => {
                 let mut new_stroke = Stroke::new(); 
                 new_stroke.points.push(point);
                 self.strokes.push(new_stroke);
             }
-            Message::Move(point) => {
-                // TODO : deadzone direction/distance
+            DrawMessage::Move(point) => {
+                // TODO deadzone direction/distance
                 if let Some(stroke) = self.strokes.last_mut() {
                     stroke.points.push(point);
                 }
             }
-            Message::End => {
+            DrawMessage::End => {
                 if let Some(stroke) = self.strokes.last() {
                     println!("Stroke length: {:?}", stroke.points.len());
                 }
@@ -44,7 +43,7 @@ impl DrawNote {
         }
     }
 
-    pub fn view(&self) -> iced::Element<Message> {
+    pub fn draw_view(&self) -> iced::Element<DrawMessage> {
         canvas(self)
             .width(iced::Fill)
             .height(iced::Fill)
@@ -52,7 +51,7 @@ impl DrawNote {
     }
 }
 
-impl Program<Message> for DrawNote{
+impl Program<DrawMessage> for DrawNote{
     type State = NoteState;
 
     fn draw(
@@ -106,25 +105,25 @@ impl Program<Message> for DrawNote{
         event: &Event,
         bounds: Rectangle,
         cursor: Cursor,
-    ) -> Option<Action<Message>>{
+    ) -> Option<Action<DrawMessage>>{
         let cursor_position = cursor.position_in(bounds)?;
         
         match event {
             Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)) => {
                 state.is_drawing = true;
-                return Some(canvas::Action::publish(Message::Start(cursor_position)))
+                return Some(canvas::Action::publish(DrawMessage::Start(cursor_position)))
             }
 
             Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left)) => {
                 state.is_drawing = false;
-                return Some(canvas::Action::publish(Message::End))
+                return Some(canvas::Action::publish(DrawMessage::End))
             }
 
             Event::Mouse(mouse::Event::CursorMoved { position: _ }) => {
                 if !state.is_drawing {
                     return None
                 }
-                return Some(canvas::Action::publish(Message::Move(cursor_position)))
+                return Some(canvas::Action::publish(DrawMessage::Move(cursor_position)))
             }
 
             _ => {}
